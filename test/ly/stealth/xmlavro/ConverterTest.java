@@ -49,35 +49,35 @@ public class ConverterTest {
 
     @Test
     public void rootIntPrimitive() {
-        rootPrimitiveWithType("xs:int", "-1", Schema.Type.INT, -1);
-        rootPrimitiveWithType("xs:unsignedByte", "1", Schema.Type.INT, 1);
-        rootPrimitiveWithType("xs:unsignedShort", "5", Schema.Type.INT, 5);
+        rootPrimitiveWithType("xs:int", "-1", Schema.Type.UNION, -1);
+        rootPrimitiveWithType("xs:unsignedByte", "1", Schema.Type.UNION, 1);
+        rootPrimitiveWithType("xs:unsignedShort", "5", Schema.Type.UNION, 5);
     }
 
     @Test
     public void rootLongPrimitive() {
-        rootPrimitiveWithType("xs:long", "20", Schema.Type.LONG, (long) 20);
-        rootPrimitiveWithType("xs:unsignedInt", "30", Schema.Type.LONG, (long) 30);
+        rootPrimitiveWithType("xs:long", "20", Schema.Type.UNION, (long) 20);
+        rootPrimitiveWithType("xs:unsignedInt", "30", Schema.Type.UNION, (long) 30);
     }
 
     @Test
     public void rootDoublePrimitive() {
-        rootPrimitiveWithType("xs:decimal", "999999999.999999999", Schema.Type.DOUBLE, 999999999.999999999);
+        rootPrimitiveWithType("xs:decimal", "999999999.999999999", Schema.Type.UNION, 999999999.999999999);
     }
 
     @Test
     public void rootUnsignedLongShouldBeKeptAsAvroString() {
-        rootPrimitiveWithType("xs:unsignedLong", "18446744073709551615", Schema.Type.STRING, "18446744073709551615");
+        rootPrimitiveWithType("xs:unsignedLong", "18446744073709551615", Schema.Type.UNION, "18446744073709551615");
     }
 
     @Test
     public void rootDateTimePrimitive() {
-      rootPrimitiveWithType("xs:dateTime", "2014-10-30T14:58:33", Schema.Type.LONG, 1414681113000L);
-      rootPrimitiveWithType("xs:dateTime", "2014-09-10T12:58:33", Schema.Type.LONG, 1410353913000L);
+      rootPrimitiveWithType("xs:dateTime", "2014-10-30T14:58:33", Schema.Type.UNION, 1414681113000L);
+      rootPrimitiveWithType("xs:dateTime", "2014-09-10T12:58:33", Schema.Type.UNION, 1410353913000L);
 
       DatumBuilder.setDefaultTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
-      rootPrimitiveWithType("xs:dateTime", "2014-10-30T07:58:33", Schema.Type.LONG, 1414681113000L);
-      rootPrimitiveWithType("xs:dateTime", "2014-09-10T05:58:33", Schema.Type.LONG, 1410353913000L);
+      rootPrimitiveWithType("xs:dateTime", "2014-10-30T07:58:33", Schema.Type.UNION, 1414681113000L);
+      rootPrimitiveWithType("xs:dateTime", "2014-09-10T05:58:33", Schema.Type.UNION, 1410353913000L);
     }
 
     public <T> void rootPrimitiveWithType(String xmlType, String xmlValue, Schema.Type avroType, T avroValue) {
@@ -88,6 +88,7 @@ public class ConverterTest {
 
         Schema schema = Converter.createSchema(xsd);
         assertEquals(avroType, schema.getType());
+
 
         String xml = "<value>" + xmlValue + "</value>";
         assertEquals(avroValue, Converter.createDatum(schema, xml));
@@ -108,6 +109,7 @@ public class ConverterTest {
                 "</xs:schema>";
 
         Schema schema = Converter.createSchema(xsd);
+
         assertEquals(Schema.Type.RECORD, schema.getType());
         assertTrue("Schema should have a valid name", schema.getName() != null && !schema.getName().isEmpty());
         assertEquals(Source.DOCUMENT, schema.getProp(Source.SOURCE));
@@ -152,13 +154,14 @@ public class ConverterTest {
                 "</xs:schema>";
 
         Schema schema = Converter.createSchema(xsd);
-        assertEquals(Schema.Type.RECORD, schema.getType());
-        assertEquals("AnonType_root", schema.getName());
-        assertEquals(3, schema.getFields().size());
+        System.out.println(schema);
+        assertEquals(Schema.Type.UNION, schema.getType());
+        assertEquals("AnonType_root", schema.getTypes().get(1).getName());
+        assertEquals(3, schema.getTypes().get(1).getFields().size());
 
-        assertEquals(Schema.Type.INT, schema.getField("i").schema().getType());
-        assertEquals(Schema.Type.STRING, schema.getField("s").schema().getType());
-        assertEquals(Schema.Type.DOUBLE, schema.getField("d").schema().getType());
+        assertEquals(Schema.Type.INT, schema.getTypes().get(1).getField("i").schema().getTypes().get(1).getType());
+        assertEquals(Schema.Type.STRING, schema.getTypes().get(1).getField("s").schema().getTypes().get(1).getType());
+        assertEquals(Schema.Type.DOUBLE, schema.getTypes().get(1).getField("d").schema().getTypes().get(1).getType());
 
         String xml =
                 "<root>" +
@@ -188,9 +191,9 @@ public class ConverterTest {
 
         Schema schema = Converter.createSchema(xsd);
 
-        Schema.Field field = schema.getField("node");
+        Schema.Field field = schema.getTypes().get(1).getField("node");
         Schema subSchema = field.schema();
-        assertSame(schema, subSchema.getTypes().get(1));
+        assertEquals(schema, subSchema);
 
         String xml = "<root><node></node></root>";
         GenericData.Record record = Converter.createDatum(schema, xml);
@@ -216,12 +219,12 @@ public class ConverterTest {
 
         Schema schema = Converter.createSchema(xsd);
 
-        Schema.Field required = schema.getField("required");
-        assertEquals(Schema.Type.STRING, required.schema().getType());
+        Schema.Field required = schema.getTypes().get(1).getField("required");
+        assertEquals(Schema.Type.UNION, required.schema().getType());
 
-        assertNull(schema.getField("prohibited"));
+        assertNull(schema.getTypes().get(1).getField("prohibited"));
 
-        Schema.Field optional = schema.getField("optional");
+        Schema.Field optional = schema.getTypes().get(1).getField("optional");
         assertEquals(Schema.Type.UNION, optional.schema().getType());
         assertEquals(
                 Arrays.asList(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.STRING)),
@@ -254,12 +257,12 @@ public class ConverterTest {
 
         Schema schema = Converter.createSchema(xsd);
 
-        assertEquals(2, schema.getFields().size());
-        Schema.Field field = schema.getField("field");
+        assertEquals(2, schema.getTypes().get(1).getFields().size());
+        Schema.Field field = schema.getTypes().get(1).getField("field");
         assertNotNull(field);
         assertEquals("" + new Source("field", true), field.getProp(Source.SOURCE));
 
-        Schema.Field field0 = schema.getField("field0");
+        Schema.Field field0 = schema.getTypes().get(1).getField("field0");
         assertEquals("" + new Source("field", false), field0.getProp(Source.SOURCE));
 
         String xml = "<root field='value'><field>value0</field></root>";
@@ -283,9 +286,9 @@ public class ConverterTest {
                 "</xs:schema>";
 
         Schema schema = Converter.createSchema(xsd);
-        assertEquals(2, schema.getFields().size());
+        assertEquals(2, schema.getTypes().get(1).getFields().size());
 
-        Schema.Field wildcardField = schema.getField(Source.WILDCARD);
+        Schema.Field wildcardField = schema.getTypes().get(1).getField(Source.WILDCARD);
         assertEquals(Schema.Type.MAP, wildcardField.schema().getType());
 
         // Two wildcard-matched elements
@@ -329,9 +332,9 @@ public class ConverterTest {
                 "</xs:schema>";
 
         Schema schema = Converter.createSchema(xsd);
-        assertEquals(1, schema.getFields().size());
+        assertEquals(1, schema.getTypes().get(1).getFields().size());
 
-        Schema.Field field = schema.getField(Source.WILDCARD);
+        Schema.Field field = schema.getTypes().get(1).getField(Source.WILDCARD);
         assertEquals(null, field.getProp(Source.SOURCE));
     }
 
@@ -350,12 +353,12 @@ public class ConverterTest {
                 "</xs:schema>";
 
         Schema schema = Converter.createSchema(xsd);
-        assertEquals(2, schema.getFields().size());
+        assertEquals(2, schema.getTypes().get(1).getFields().size());
 
-        Schema.Field requiredField = schema.getField("required");
-        assertEquals(Schema.Type.STRING, requiredField.schema().getType());
+        Schema.Field requiredField = schema.getTypes().get(1).getField("required");
+        assertEquals(Schema.Type.UNION, requiredField.schema().getType());
 
-        Schema.Field optionalField = schema.getField("optional");
+        Schema.Field optionalField = schema.getTypes().get(1).getField("optional");
         Schema optionalSchema = optionalField.schema();
         assertEquals(Schema.Type.UNION, optionalSchema.getType());
 
@@ -393,7 +396,7 @@ public class ConverterTest {
                 "</xs:schema>";
 
         Schema schema = Converter.createSchema(xsd);
-        Schema.Field valueField = schema.getField("value");
+        Schema.Field valueField = schema.getTypes().get(1).getField("value");
         assertEquals(Schema.Type.ARRAY, valueField.schema().getType());
         assertEquals(Schema.Type.STRING, valueField.schema().getElementType().getType());
 
@@ -422,17 +425,17 @@ public class ConverterTest {
                 "</xs:schema>";
 
         Schema schema = Converter.createSchema(xsd);
-        assertEquals(Schema.Type.RECORD, schema.getType());
-        assertEquals(2, schema.getFields().size());
+        assertEquals(Schema.Type.UNION, schema.getType());
+        assertEquals(2, schema.getTypes().get(1).getFields().size());
 
-        Schema.Field sField = schema.getField("s");
+        Schema.Field sField = schema.getTypes().get(1).getField("s");
         assertEquals(Schema.Type.UNION, sField.schema().getType());
         assertEquals(
                 Arrays.asList(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.STRING)),
                 sField.schema().getTypes()
         );
 
-        Schema.Field iField = schema.getField("i");
+        Schema.Field iField = schema.getTypes().get(1).getField("i");
         assertEquals(Schema.Type.UNION, iField.schema().getType());
         assertEquals(Arrays.asList(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.INT)), iField.schema().getTypes());
 
@@ -549,81 +552,6 @@ public class ConverterTest {
                 "{'i': 1}," +
                 "{'i': 2}" +
                 "]", datum.toString(), false);
-    }
-
-    @Test
-    public void arrayFromComplexTypeSequenceOfChoiceElements() throws JSONException {
-        // Given
-        String xsd = "<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>" +
-                "  <xs:element name='root'>" +
-                "    <xs:complexType>" +
-                "     <xs:sequence>" +
-                "        <xs:element name='s' type='xs:string'/>" +
-                "        <xs:element name='i' type='xs:int'/>" +
-                "        <xs:choice maxOccurs='2'>" +
-                "          <xs:element name='x' type='xs:string'/>" +
-                "          <xs:element name='y' type='xs:int'/>" +
-                "        </xs:choice>" +
-                "     </xs:sequence>" +
-                "    </xs:complexType>" +
-                "  </xs:element>" +
-                "</xs:schema>";
-
-        String xml = 
-                "<root>" +
-                    "<s>s</s>" +
-                    "<i>1</i>" +
-                    "<x>x1</x>" +
-                    "<y>2</y>" +
-                "</root>";
-
-        // When
-        Schema schema = Converter.createSchema(xsd);
-        Object datum = Converter.createDatum(schema, xml);
-
-        // Then
-        JSONAssert.assertEquals("{" +
-                "    'type': 'record'," +
-                "    'fields': [" +
-                "        {" +
-                "            'name': 's'," +
-                "            'type': 'string'" +
-                "        }," +
-                "        {" +
-                "            'name': 'i'," +
-                "            'type': 'int'" +
-                "        }," +
-                "        {" +
-                "            'name': 'type0'," +
-                "            'type': {" +
-                "                'type': 'array'," +
-                "                'items': {" +
-                "                    'type': 'record'," +
-                "                    'name': 'type1'," +
-                "                    'fields': [" +
-                "                        {" +
-                "                            'name': 'x'," +
-                "                            'type': ['null','string']" +
-                "                        }," +
-                "                        {" +
-                "                            'name': 'y'," +
-                "                            'type': ['null','int']" +
-                "                        }" +
-                "                    ]" +
-                "                }" +
-                "            }" +
-                "        }" +
-                "    ]" +
-                "}", schema.toString(), false);
-
-        JSONAssert.assertEquals("{" +
-                "    's': 's'," +
-                "    'i': 1," +
-                "    'type0': [" +
-                "        {'x': 'x1'}," +
-                "        {'y': 2}" +
-                "    ]" +
-                "}", datum.toString(), false);
     }
 
     @Test

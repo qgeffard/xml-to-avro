@@ -12,6 +12,7 @@ import org.apache.xerces.xni.parser.XMLErrorHandler;
 import org.apache.xerces.xni.parser.XMLInputSource;
 import org.apache.xerces.xni.parser.XMLParseException;
 import org.apache.xerces.xs.*;
+import org.codehaus.jackson.node.NullNode;
 import org.w3c.dom.DOMError;
 import org.w3c.dom.DOMErrorHandler;
 import org.w3c.dom.DOMLocator;
@@ -109,9 +110,8 @@ public class SchemaBuilder {
         for (int i = 0; i < rootEls.getLength(); i++) {
             XSElementDeclaration el = (XSElementDeclaration) rootEls.item(i);
             XSTypeDefinition type = el.getTypeDefinition();
-
             debug("Processing root element " + el.getName() + "{" + el.getNamespace() + "}");
-            Schema schema = createTypeSchema(type, false, false);
+            Schema schema = createTypeSchema(type, true, false);
             schemas.put(new Source(el.getName()), schema);
         }
 
@@ -126,14 +126,10 @@ public class SchemaBuilder {
 
         for (Source source : schemas.keySet()) {
             Schema schema = schemas.get(source);
-            Schema nullSchema = Schema.create(Schema.Type.NULL);
-            Schema optionalSchema = Schema.createUnion(Arrays.asList(nullSchema, schema));
-
-            Schema.Field field = new Schema.Field(source.getName(), optionalSchema, null, null);
+            Schema.Field field = new Schema.Field(source.getName(), schema, null, NullNode.getInstance());
             field.addProp(Source.SOURCE, "" + source);
             fields.add(field);
         }
-
         Schema schema = Schema.createRecord(nextTypeName(), "", "", false);
         schema.setFields(fields);
         schema.addProp(Source.SOURCE, Source.DOCUMENT);
@@ -161,6 +157,7 @@ public class SchemaBuilder {
         else if (optional) {
             Schema nullSchema = Schema.create(Schema.Type.NULL);
             schema = Schema.createUnion(Arrays.asList(nullSchema, schema));
+
         }
 
         typeLevel--;
@@ -216,8 +213,7 @@ public class SchemaBuilder {
             XSAttributeUse attrUse = (XSAttributeUse) attrUses.item(i);
             XSAttributeDeclaration attrDecl = attrUse.getAttrDeclaration();
 
-            boolean optional = !attrUse.getRequired();
-            Schema.Field field = createField(fields.values(), attrDecl, attrDecl.getTypeDefinition(), optional, false);
+            Schema.Field field = createField(fields.values(), attrDecl, attrDecl.getTypeDefinition(), true, false);
             fields.put(field.getProp(Source.SOURCE), field);
         }
 
@@ -229,7 +225,7 @@ public class SchemaBuilder {
             throw new ConverterException("Unsupported term type " + term.getType());
 
         XSModelGroup group = (XSModelGroup) term;
-        createGroupFields(group, fields, false);
+        createGroupFields(group, fields, true);
 
         return new ArrayList<>(fields.values());
     }
@@ -258,7 +254,7 @@ public class SchemaBuilder {
                         createGroupFields(subGroup, fields, forceOptional || insideChoice);
                     else {
                         String fieldName = nextTypeName();
-                        fields.put(fieldName, new Schema.Field(fieldName, createGroupSchema(nextTypeName(), subGroup), null, null));
+                        fields.put(fieldName, new Schema.Field(fieldName, createGroupSchema(nextTypeName(), subGroup), null, NullNode.getInstance()));
                     }
                     break;
                 case XSConstants.WILDCARD:
@@ -279,7 +275,7 @@ public class SchemaBuilder {
         boolean wildcard = source.getType() == XSConstants.WILDCARD;
         if (wildcard) {
             Schema map = Schema.createMap(Schema.create(Schema.Type.STRING));
-            return new Schema.Field(Source.WILDCARD, map, null, null);
+            return new Schema.Field(Source.WILDCARD, map, null, NullNode.getInstance());
         }
 
         Schema fieldSchema = createTypeSchema(type, optional, array);
@@ -287,7 +283,7 @@ public class SchemaBuilder {
         String name = validName(source.getName());
         name = uniqueFieldName(fields, name);
 
-        Schema.Field field = new Schema.Field(name, fieldSchema, null, null);
+        Schema.Field field = new Schema.Field(name, fieldSchema, null, NullNode.getInstance());
 
         boolean attribute = source.getType() == XSConstants.ATTRIBUTE_DECLARATION;
         field.addProp(Source.SOURCE, "" + new Source(source.getName(), attribute));
