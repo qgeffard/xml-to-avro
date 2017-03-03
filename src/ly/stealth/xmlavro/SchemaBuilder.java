@@ -26,7 +26,7 @@ public class SchemaBuilder {
     private Resolver resolver;
 
     private static Map<Short, Schema.Type> primitives = new HashMap<>();
-    static {
+   /* static {
         primitives.put(XSConstants.BOOLEAN_DT, Schema.Type.BOOLEAN);
 
         primitives.put(XSConstants.INT_DT, Schema.Type.INT);
@@ -50,6 +50,32 @@ public class SchemaBuilder {
         primitives.put(XSConstants.DECIMAL_DT, Schema.Type.DOUBLE);
 
         primitives.put(XSConstants.DATETIME_DT, Schema.Type.LONG);
+    } */
+
+    static {
+        primitives.put(XSConstants.BOOLEAN_DT, Schema.Type.STRING);
+
+        primitives.put(XSConstants.INT_DT, Schema.Type.STRING);
+        primitives.put(XSConstants.BYTE_DT, Schema.Type.STRING);
+        primitives.put(XSConstants.SHORT_DT, Schema.Type.STRING);
+        primitives.put(XSConstants.UNSIGNEDBYTE_DT, Schema.Type.STRING);
+        primitives.put(XSConstants.UNSIGNEDSHORT_DT, Schema.Type.STRING);
+
+        primitives.put(XSConstants.INTEGER_DT, Schema.Type.STRING);
+        primitives.put(XSConstants.NEGATIVEINTEGER_DT, Schema.Type.STRING);
+        primitives.put(XSConstants.NONNEGATIVEINTEGER_DT, Schema.Type.STRING);
+        primitives.put(XSConstants.POSITIVEINTEGER_DT, Schema.Type.STRING);
+        primitives.put(XSConstants.NONPOSITIVEINTEGER_DT, Schema.Type.STRING);
+
+        primitives.put(XSConstants.LONG_DT, Schema.Type.STRING);
+        primitives.put(XSConstants.UNSIGNEDINT_DT, Schema.Type.STRING);
+
+        primitives.put(XSConstants.FLOAT_DT, Schema.Type.STRING);
+
+        primitives.put(XSConstants.DOUBLE_DT, Schema.Type.STRING);
+        primitives.put(XSConstants.DECIMAL_DT, Schema.Type.STRING);
+
+        primitives.put(XSConstants.DATETIME_DT, Schema.Type.STRING);
     }
 
     private Map<String, Schema> schemas = new LinkedHashMap<>();

@@ -49,20 +49,20 @@ public class ConverterTest {
 
     @Test
     public void rootIntPrimitive() {
-        rootPrimitiveWithType("xs:int", "-1", Schema.Type.UNION, -1);
-        rootPrimitiveWithType("xs:unsignedByte", "1", Schema.Type.UNION, 1);
-        rootPrimitiveWithType("xs:unsignedShort", "5", Schema.Type.UNION, 5);
+        rootPrimitiveWithType("xs:int", "-1", Schema.Type.UNION, "-1");
+        rootPrimitiveWithType("xs:unsignedByte", "1", Schema.Type.UNION, "1");
+        rootPrimitiveWithType("xs:unsignedShort", "5", Schema.Type.UNION, "5");
     }
 
     @Test
     public void rootLongPrimitive() {
-        rootPrimitiveWithType("xs:long", "20", Schema.Type.UNION, (long) 20);
-        rootPrimitiveWithType("xs:unsignedInt", "30", Schema.Type.UNION, (long) 30);
+        rootPrimitiveWithType("xs:long", "20", Schema.Type.UNION, "20");
+        rootPrimitiveWithType("xs:unsignedInt", "30", Schema.Type.UNION, "30");
     }
 
     @Test
     public void rootDoublePrimitive() {
-        rootPrimitiveWithType("xs:decimal", "999999999.999999999", Schema.Type.UNION, 999999999.999999999);
+        rootPrimitiveWithType("xs:decimal", "999999999.999999999", Schema.Type.UNION, "999999999.999999999");
     }
 
     @Test
@@ -72,12 +72,12 @@ public class ConverterTest {
 
     @Test
     public void rootDateTimePrimitive() {
-      rootPrimitiveWithType("xs:dateTime", "2014-10-30T14:58:33", Schema.Type.UNION, 1414681113000L);
-      rootPrimitiveWithType("xs:dateTime", "2014-09-10T12:58:33", Schema.Type.UNION, 1410353913000L);
+      rootPrimitiveWithType("xs:dateTime", "2014-10-30T14:58:33", Schema.Type.UNION, "2014-10-30T14:58:33");
+      rootPrimitiveWithType("xs:dateTime", "2014-09-10T12:58:33", Schema.Type.UNION, "2014-09-10T12:58:33");
 
       DatumBuilder.setDefaultTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
-      rootPrimitiveWithType("xs:dateTime", "2014-10-30T07:58:33", Schema.Type.UNION, 1414681113000L);
-      rootPrimitiveWithType("xs:dateTime", "2014-09-10T05:58:33", Schema.Type.UNION, 1410353913000L);
+      rootPrimitiveWithType("xs:dateTime", "2014-10-30T07:58:33", Schema.Type.UNION, "2014-10-30T07:58:33");
+      rootPrimitiveWithType("xs:dateTime", "2014-09-10T05:58:33", Schema.Type.UNION, "2014-09-10T05:58:33");
     }
 
     public <T> void rootPrimitiveWithType(String xmlType, String xmlValue, Schema.Type avroType, T avroValue) {
@@ -118,7 +118,7 @@ public class ConverterTest {
         Schema.Field field0 = schema.getFields().get(0);
         assertEquals("" + new Source("i"), field0.getProp(Source.SOURCE));
         assertEquals(Schema.Type.UNION, field0.schema().getType());
-        assertEquals(Schema.Type.INT, field0.schema().getTypes().get(1).getType());
+        assertEquals(Schema.Type.STRING, field0.schema().getTypes().get(1).getType());
         assertEquals(Schema.Type.NULL, field0.schema().getTypes().get(0).getType());
 
         Schema.Field field1 = schema.getFields().get(1);
@@ -130,7 +130,7 @@ public class ConverterTest {
         String xml = "<i>5</i>";
         GenericData.Record record = Converter.createDatum(schema, xml);
         assertEquals(null, record.get("r"));
-        assertEquals(5, record.get("i"));
+        assertEquals("5", record.get("i"));
 
         xml = "<r><s>s</s></r>";
         record = Converter.createDatum(schema, xml);
@@ -159,9 +159,9 @@ public class ConverterTest {
         assertEquals("AnonType_root", schema.getTypes().get(1).getName());
         assertEquals(3, schema.getTypes().get(1).getFields().size());
 
-        assertEquals(Schema.Type.INT, schema.getTypes().get(1).getField("i").schema().getTypes().get(1).getType());
+        assertEquals(Schema.Type.STRING, schema.getTypes().get(1).getField("i").schema().getTypes().get(1).getType());
         assertEquals(Schema.Type.STRING, schema.getTypes().get(1).getField("s").schema().getTypes().get(1).getType());
-        assertEquals(Schema.Type.DOUBLE, schema.getTypes().get(1).getField("d").schema().getTypes().get(1).getType());
+        assertEquals(Schema.Type.STRING, schema.getTypes().get(1).getField("d").schema().getTypes().get(1).getType());
 
         String xml =
                 "<root>" +
@@ -172,9 +172,9 @@ public class ConverterTest {
 
         GenericData.Record record = Converter.createDatum(schema, xml);
 
-        assertEquals(1, record.get("i"));
+        assertEquals("1", record.get("i"));
         assertEquals("s", record.get("s"));
-        assertEquals(1.0, record.get("d"));
+        assertEquals("1.0", record.get("d"));
     }
 
     @Test
@@ -437,7 +437,7 @@ public class ConverterTest {
 
         Schema.Field iField = schema.getTypes().get(1).getField("i");
         assertEquals(Schema.Type.UNION, iField.schema().getType());
-        assertEquals(Arrays.asList(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.INT)), iField.schema().getTypes());
+        assertEquals(Arrays.asList(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.STRING)), iField.schema().getTypes());
 
         String xml = "<root><s>s</s></root>";
         GenericData.Record record = Converter.createDatum(schema, xml);
@@ -445,7 +445,7 @@ public class ConverterTest {
 
         xml = "<root><i>1</i></root>";
         record = Converter.createDatum(schema, xml);
-        assertEquals(1, record.get("i"));
+        assertEquals("1", record.get("i"));
     }
 
     @Test
@@ -496,11 +496,11 @@ public class ConverterTest {
 
       Object secondRecord = record.get(1);
       assertTrue(secondRecord instanceof GenericData.Record);
-      assertEquals(1, ((GenericData.Record) secondRecord).get("i"));
+      assertEquals("1", ((GenericData.Record) secondRecord).get("i"));
 
       Object thirdRecord = record.get(2);
       assertTrue(thirdRecord instanceof GenericData.Record);
-      assertEquals(2, ((GenericData.Record) thirdRecord).get("i"));
+      assertEquals("2", ((GenericData.Record) thirdRecord).get("i"));
     }
 
     @Test
@@ -541,7 +541,7 @@ public class ConverterTest {
                 "            }," +
                 "            {" +
                 "                'name': 'i'," +
-                "                'type': ['null', 'int']" +
+                "                'type': ['null', 'string']" +
                 "            }" +
                 "        ]" +
                 "    }" +
@@ -549,8 +549,8 @@ public class ConverterTest {
 
         JSONAssert.assertEquals("[" +
                 "{'s': 's'}," +
-                "{'i': 1}," +
-                "{'i': 2}" +
+                "{'i': '1'}," +
+                "{'i': '2'}" +
                 "]", datum.toString(), false);
     }
 

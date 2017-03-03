@@ -1,0 +1,75 @@
+[ "null", {
+  "type" : "record",
+  "name" : "AnonType_student",
+  "fields" : [ {
+    "name" : "name",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "AnonType_namestudent",
+      "fields" : [ {
+        "name" : "lastname",
+        "type" : [ "null", "string" ],
+        "default" : null,
+        "source" : "attribute lastname"
+      }, {
+        "name" : "firstname",
+        "type" : [ "null", "string" ],
+        "default" : null,
+        "source" : "element firstname"
+      }, {
+        "name" : "middlename",
+        "type" : [ "null", "string" ],
+        "default" : null,
+        "source" : "element middlename"
+      }, {
+        "name" : "lastname0",
+        "type" : [ "null", "string" ],
+        "default" : null,
+        "source" : "element lastname"
+      } ]
+    } ],
+    "default" : null,
+    "source" : "element name"
+  }, {
+    "name" : "dob",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "AnonType_dobstudent",
+      "fields" : [ {
+        "name" : "date",
+        "type" : [ "null", "int" ],
+        "default" : null,
+        "source" : "element date"
+      }, {
+        "name" : "month",
+        "type" : [ "null", "string" ],
+        "default" : null,
+        "source" : "element month"
+      }, {
+        "name" : "year",
+        "type" : [ "null", "int" ],
+        "default" : null,
+        "source" : "element year"
+      } ]
+    } ],
+    "default" : null,
+    "source" : "element dob"
+  }, {
+    "name" : "electives",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "AnonType_electivesstudent",
+      "fields" : [ {
+        "name" : "subject",
+        "type" : {
+          "type" : "array",
+          "items" : "string"
+        },
+        "default" : null,
+        "source" : "element subject"
+      } ]
+    } ],
+    "default" : null,
+    "source" : "element electives"
+  } ]
+} ]
